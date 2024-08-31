@@ -1,2 +1,2 @@
-# DB ORM
-An easy o use ORM for database
+# Morgan ORM for Python
+An easy to use ORM for databases
