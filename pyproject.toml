@@ -3,7 +3,7 @@ requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "dborm"
+name = "py-morgan-orm"
 version = "0.0.1"
 authors = [
   { name="Vicente Gutiérrez", email="gtz.rvera@gmail.com" },
@@ -18,5 +18,5 @@ classifiers = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/vcgtz/dborm"
-Issues = "https://github.com/vcgtz/dborm/issues"
+Homepage = "https://github.com/vcgtz/py-morgan-orm"
+Issues = "https://github.com/vcgtz/py-morgan-orm/issues"
