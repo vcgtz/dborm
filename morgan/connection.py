@@ -44,10 +44,15 @@ class SQLiteConnection(DatabaseConnection):
             raise ConnectionError(f"Failed to connect to the database: {e}") from e
 
     def disconnect(self) -> None:
+        if self._connection is None:
+            return
+
         try:
             self._connection.close()
         except sqlite3.Error as e:
             raise DisconnectionError(f"Failed to disconnect from database: {e}") from e
+        finally:
+            self._connection = None
 
     def execute(self, query: str, params: Union[dict[str, Any], None] = None) -> None:
         if not self._connection:
