@@ -1,3 +1,6 @@
+from typing import Any
+
+
 class QueryBuilder:
     """Query Builder"""
 
@@ -8,14 +11,16 @@ class QueryBuilder:
         self.__order_by = []
         self.__limit = None
         self.__offset = None
+        self.__params: list[Any] = []
 
     def select(self, *columns: str) -> "QueryBuilder":
         self.__columns.extend(columns)
 
         return self
 
-    def where(self, condition: str) -> "QueryBuilder":
+    def where(self, condition: str, *params: Any) -> "QueryBuilder":
         self.__where.append(condition)
+        self.__params.extend(params)
 
         return self
 
@@ -34,7 +39,7 @@ class QueryBuilder:
 
         return self
 
-    def get(self) -> str:
+    def get(self) -> tuple[str, list[Any]]:
         columns = ", ".join(self.__columns) if self.__columns else "*"
         query = f"SELECT {columns} FROM {self.__table}"
 
@@ -50,4 +55,4 @@ class QueryBuilder:
         if self.__offset:
             query += f" OFFSET {self.__offset}"
 
-        return query
+        return query, self.__params
