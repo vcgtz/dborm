@@ -36,6 +36,14 @@ class SQLiteConnection(DatabaseConnection):
         self._database = database
         self._connection: Union[sqlite3.Connection, None] = None
 
+    def __enter__(self):
+        self.connect()
+
+        return self
+
+    def __exit__(self, type, value, traceback):
+        self.disconnect()
+
     def connect(self) -> None:
         try:
             self._connection = sqlite3.connect(self._database)
