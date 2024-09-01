@@ -1,0 +1,3 @@
+[MAIN]
+disable="ine-too-long / C0301"
+disable="W0622:redefined-builtin"
