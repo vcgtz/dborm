@@ -4,11 +4,11 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "py-morgan-orm"
-version = "0.0.2"
+version = "0.1.0"
 authors = [
   { name="Vicente Gutiérrez", email="gtz.rvera@gmail.com" },
 ]
-description = "An easy to use ORM for databases"
+description = "A simple and easy-to-use ORM for managing your database queries."
 readme = "README.md"
 requires-python = ">=3.9"
 classifiers = [
