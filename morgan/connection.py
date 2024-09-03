@@ -73,6 +73,10 @@ class DatabaseConnection(ABC):
     def fetch_all(self, query: str, params: Union[list[Any], None] = None) -> list[dict[str, Any]]:
         pass
 
+    @abstractmethod
+    def get_last_inserted_id(self) -> Union[int, None]:
+        pass
+
 
 
 class SQLiteConnection(DatabaseConnection):
@@ -80,6 +84,7 @@ class SQLiteConnection(DatabaseConnection):
     def __init__(self, database: str) -> None:
         self.__database = database
         self.__connection: Union[sqlite3.Connection, None] = None
+        self.__last_insert_id: Union[int, None] = None
 
     def __enter__(self):
         self.connect()
@@ -115,6 +120,7 @@ class SQLiteConnection(DatabaseConnection):
             cursor = self.__connection.cursor()
             cursor.execute(query, params or {})
             self.__connection.commit()
+            self.__last_insert_id = cursor.lastrowid
         except sqlite3.Error as e:
             raise QueryExecutionError(f"Query execution failed: {e}") from e
 
@@ -145,3 +151,6 @@ class SQLiteConnection(DatabaseConnection):
             return [dict(row) for row in cursor.fetchall()]
         except sqlite3.Error as e:
             raise QueryExecutionError(f"Query execution failed: {e}") from e
+
+    def get_last_inserted_id(self) -> Union[int, None]:
+        return self.__last_insert_id

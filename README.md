@@ -50,15 +50,38 @@ User.where("status = ?", 0).update("status = ?", 1).exec()
 User.where("email = ?", "user@email.com").delete().exec()
 ```
 
+### Working with an instance
+```python
+# Creating a new user
+user = User(username="admin", email="admin@email.com", status=1)
+user.save()
+
+# Or...
+user = User()
+user.username = "admin"
+user.email = "admin@email.com"
+user.status = 1
+user.save()
+
+# Updating an existing record
+user = User.get_by_pk(pk=8)
+user.email = "support@email.com"
+user.save()
+
+# Deleting a record
+user = User.get_by_pk(pk=9)
+user.delete()
+```
+
 ## Roadmap
-- Implement basic CRUD operations (Create, Read, Update, Delete).
-- Add support for simple relationships such as one-to-one and one-to-many.
-- Integrate more SQL clauses.
+- Add unit tests.
+- Add support for MySQL/MariaDB and PostgreSQL.
+- Add support for statements like `GROUP BY` and `HAVING`.
+- Add support for relationships such as one-to-one, one-to-many, and many-to-one.
 
 Future plans include:
 - Support for migrations.
-- CLI for creating migrations and models.
-- Integration with additional databases like MySQL/MariaDB and PostgreSQL.
+- CLI tool for creating migrations and models files.
 
 ## License
 [MIT](https://github.com/vcgtz/py-morgan-orm/blob/main/LICENSE)

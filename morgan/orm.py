@@ -116,6 +116,7 @@ class QueryBuilder(SQLQueryBuilder):
         query, params = self.get_query()
 
         with self.__db:
+            print(query, params)
             self.__db.execute(query=query, params=params)
 
 
@@ -176,3 +177,35 @@ class Model(ABC):
                 return cls(**row)
 
             return None
+
+    def save(self) -> None:
+        if hasattr(self, self.primary_key) and getattr(self, self.primary_key):
+            set_clause = ", ".join([f"{key} = ?" for key in self.__dict__ if key != self.primary_key])
+            params = [value for key, value in self.__dict__.items() if key != self.primary_key]
+
+            pk_value = getattr(self, self.primary_key)
+
+            QueryBuilder(self.table, db_connection=self.__db) \
+                .where(f"{self.primary_key} = ?", pk_value) \
+                .update(set_clause, *params) \
+                .exec()
+        else:
+            columns = ", ".join(self.__dict__.keys())
+            placeholders = ", ".join(["?" for _ in self.__dict__.keys()])
+            params = list(self.__dict__.values())
+
+            query = f"INSERT INTO {self.table} ({columns}) VALUES ({placeholders})"
+            with self.__db:
+                self.__db.execute(query, params)
+
+            if self.primary_key in self.__dict__:
+                setattr(self, self.primary_key, self.__db.get_last_inserted_id())
+
+    def delete(self) -> None:
+        if hasattr(self, self.primary_key) and getattr(self, self.primary_key):
+            QueryBuilder(self.table, db_connection=self.__db) \
+                .where(f"{self.primary_key} = ?", getattr(self, self.primary_key)) \
+                .delete() \
+                .exec()
+        else:
+            raise ValueError("Cannot delete a record without a primary key.")
