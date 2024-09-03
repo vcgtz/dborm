@@ -116,7 +116,6 @@ class QueryBuilder(SQLQueryBuilder):
         query, params = self.get_query()
 
         with self.__db:
-            print(query, params)
             self.__db.execute(query=query, params=params)
 
 

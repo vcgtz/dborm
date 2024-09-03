@@ -74,6 +74,8 @@ user.delete()
 ```
 
 ## Roadmap
+- Add support for methods such as `create_one` and `create_many` in the `QueryBuilder`.
+- Add support for logging queries.
 - Add unit tests.
 - Add support for MySQL/MariaDB and PostgreSQL.
 - Add support for statements like `GROUP BY` and `HAVING`.
