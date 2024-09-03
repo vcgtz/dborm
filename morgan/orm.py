@@ -8,8 +8,7 @@ and `QueryBuilder`. Also, it containes the base clase for model creation.
 from abc import ABC
 from typing import Any, TypeVar, Union
 
-from morgan.connection import DatabaseConnection, SQLiteConnection
-
+from morgan.connection import DatabaseConnection, SQLiteConnection, ConnectionType, DatabaseConfig
 
 T = TypeVar('T', bound='Model')
 
@@ -204,13 +203,13 @@ class Model(ABC):
 
     Attributes:
         `table` (str): The name of the database table associated with the model.
-        `connection` (dict[str, Any]): The database connection configuration.
+        `db_config` (DatabaseConfig): The database configuration.
         `attributes` (dict[str, Any]): The attributes and their values for an instance of the model.
         `primary_key` (str): The name of the primary key column. Defaults to "id".
         `__db` (DatabaseConnection): The database connection object.
     """
     table: str = None
-    connection: dict[str, Any] = {}
+    db_config: DatabaseConfig = None
     attributes: dict[str, Any] = {}
     primary_key: str = "id"
 
@@ -242,13 +241,9 @@ class Model(ABC):
         """
         super().__init_subclass__(**kwargs)
 
-        cls.connection = {
-            "connector": "sqlite",
-            "database": "development.db"
-        }
 
-        if cls.connection.get("connector") == "sqlite":
-            cls.__db = SQLiteConnection(database=cls.connection.get("database"))
+        if cls.db_config.connector == ConnectionType.SQLite:
+            cls.__db = SQLiteConnection(database=cls.db_config.database_url)
 
     @classmethod
     def query(cls: type[T]) -> QueryBuilder:
