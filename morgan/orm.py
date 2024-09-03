@@ -14,6 +14,7 @@ T = TypeVar('T', bound='Model')
 
 
 class SQLQueryBuilder(ABC):
+
     def __init__(self, table: str):
         self.__table = table
         self.__columns = []
@@ -23,8 +24,24 @@ class SQLQueryBuilder(ABC):
         self.__offset = None
         self.__params: list[Any] = []
 
+        self._operation = "SELECT"
+        self.__set_clause: Union[str, None] = None
+
     def select(self, *columns: str) -> "SQLQueryBuilder":
+        self._operation = "SELECT"
         self.__columns.extend(columns)
+
+        return self
+
+    def update(self, set_clause: str, *params: Any) -> "SQLQueryBuilder":
+        self._operation = "UPDATE"
+        self.__set_clause = set_clause
+        self.__params = list(params) + self.__params
+
+        return self
+
+    def delete(self) -> "SQLQueryBuilder":
+        self._operation = "DELETE"
 
         return self
 
@@ -50,19 +67,28 @@ class SQLQueryBuilder(ABC):
         return self
 
     def get_query(self) -> tuple[str, list[Any]]:
-        columns = ", ".join(self.__columns) if self.__columns else "*"
-        query = f"SELECT {columns} FROM {self.__table}"
+        if self._operation == "SELECT":
+            columns = ", ".join(self.__columns) if self.__columns else "*"
+            query = f"SELECT {columns} FROM {self.__table}"
+        elif self._operation == "UPDATE":
+            if not self.__set_clause:
+                raise ValueError("No SET clause provided for the UPDATE operation.")
+            query = f"UPDATE {self.__table} SET {self.__set_clause}"
+        elif self._operation == "DELETE":
+            query = f"DELETE FROM {self.__table}"
+        else:
+            raise ValueError(f"Unsupported operation: {self._operation}")
 
         if self.__where:
             query += f" WHERE {" AND ".join(self.__where)}"
 
-        if self.__order_by:
+        if self.__order_by and self._operation == "SELECT":
             query += f" ORDER BY {", ".join(self.__order_by)}"
 
-        if self.__limit:
+        if self.__limit is not None and self._operation == "SELECT":
             query += f" LIMIT {self.__limit}"
 
-        if self.__offset:
+        if self.__offset is not None and self._operation == "SELECT":
             query += f" OFFSET {self.__offset}"
 
         return query, self.__params
@@ -83,11 +109,14 @@ class QueryBuilder(SQLQueryBuilder):
 
         return [self.__model(**row) for row in rows]
 
-    def update(self) -> None:
-        pass
+    def exec(self) -> None:
+        if self._operation not in ["UPDATE", "DELETE"]:
+            raise ValueError("exec() can only be used with UPDATE or DELETE operations.")
 
-    def delete(self) -> None:
-        pass
+        query, params = self.get_query()
+
+        with self.__db:
+            self.__db.execute(query=query, params=params)
 
 
 class Model(ABC):

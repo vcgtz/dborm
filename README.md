@@ -8,50 +8,46 @@ I decided to create an ORM for two main reasons:
 
 I've worked with Laravel for many years, so in a way, I'm drawing inspiration from Eloquent for this ORM.
 
-## What I Expect to Achieve
-Here's how I envision Morgan ORM working once the first version is released:
+## Usage
+### Using the query builder from a model
+
+Creating a model
 ```python
-# Importing the base class for models
+# Import required packages
+from morgan.connection import DatabaseConfig, ConnectionType
 from morgan.orm import Model
 
-# Defining the database connection
-db_connection = {
-    "connector": "sqlite",
-    "database": "development.db"
-}
-
-# Example for connecting to MySQL
-db_connection = {
-    "connector": "mysql",
-    "host": "127.0.0.1",
-    "port": 3306,
-    "username": "admin",
-    "password": "p4ssw0rd",
-    "database": "development"
-}
-
-# Creating a model
+# Create your model inheriting from Model
 class User(Model):
-    table = "users"
-    primary_key = "id"
-    connection = db_connection
+    table = "users"     # Name of your table
+    primary_key = "id"  # Name of your primary key
 
-# Querying the database using the User model
-# Each user or record will be an instance of the User class
-admin_users = User.where("role = ?", "admin").order_by("created_at", "DESC").get()
-active_users = User.where("active = ?", True).limit(5).get()
-current_user = User.get_by_pk(pk=23)
-all_users = User.all()
+    # Configuration for the database (now it only supports SQLite)
+    db_config = DatabaseConfig(connector=ConnectionType.SQLite, database_url="morgan.db")
+```
 
-# Creating new users
-user = User.create(username="vcgtz", email="my-email@email.com", password="********")
+Some available operations
+```python
+# Get all the users
+users = User.all()
 
-# Creating, updating, and even deleting users
-user = User(username="vcgtz", email="my-email@email.com", password="********")
-user.save()  # Save the new user
-user.email = "my-new-email@email.com"
-user.save()  # Update the user's email
-user.delete()  # Delete the user
+# Get user by primary key
+user = User.get_by_pk(pk=92)
+
+# Get users by filtering results
+users = User.where("status = ?", 1).get()
+
+# Limiting results
+users = User.where("status = ?", 1).limit(5).get()
+
+# Ordering results
+users = User.where("status = ?", 1).order_by("created_at", "DESC").get()
+
+# Updating records
+User.where("status = ?", 0).update("status = ?", 1).exec()
+
+# Deleting records
+User.where("email = ?", "user@email.com").delete().exec()
 ```
 
 ## Roadmap

@@ -62,15 +62,15 @@ class DatabaseConnection(ABC):
         pass
 
     @abstractmethod
-    def execute(self, query: str, params: Union[dict[str, Any], None] = None) -> None:
+    def execute(self, query: str, params: Union[list[Any], None] = None) -> None:
         pass
 
     @abstractmethod
-    def fetch_one(self, query: str, params: Union[dict[str, Any], None] = None) -> Union[dict[str, Any], None]:
+    def fetch_one(self, query: str, params: Union[list[Any], None] = None) -> Union[dict[str, Any], None]:
         pass
 
     @abstractmethod
-    def fetch_all(self, query: str, params: Union[dict[str, Any], None] = None) -> list[dict[str, Any]]:
+    def fetch_all(self, query: str, params: Union[list[Any], None] = None) -> list[dict[str, Any]]:
         pass
 
 
@@ -107,7 +107,7 @@ class SQLiteConnection(DatabaseConnection):
         finally:
             self.__connection = None
 
-    def execute(self, query: str, params: Union[dict[str, Any], None] = None) -> None:
+    def execute(self, query: str, params: Union[list[Any], None] = None) -> None:
         if not self.__connection:
             raise ConnectionError("No active database connection")
 
@@ -118,7 +118,7 @@ class SQLiteConnection(DatabaseConnection):
         except sqlite3.Error as e:
             raise QueryExecutionError(f"Query execution failed: {e}") from e
 
-    def fetch_one(self, query: str, params: Union[dict[str, Any], None] = None) -> Union[dict[str, Any], None]:
+    def fetch_one(self, query: str, params: Union[list[Any], None] = None) -> Union[dict[str, Any], None]:
         if not self.__connection:
             raise ConnectionError("No active database connection")
 
@@ -134,7 +134,7 @@ class SQLiteConnection(DatabaseConnection):
         except sqlite3.Error as e:
             raise QueryExecutionError(f"Query execution failed: {e}") from e
 
-    def fetch_all(self, query: str, params: Union[dict[str, Any], None] = None) -> list[dict[str, Any]]:
+    def fetch_all(self, query: str, params: Union[list[Any], None] = None) -> list[dict[str, Any]]:
         if not self.__connection:
             raise ConnectionError("No active database connection")
 
