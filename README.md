@@ -43,6 +43,16 @@ users = User.where("status = ?", 1).limit(5).get()
 # Ordering results
 users = User.where("status = ?", 1).order_by("created_at", "DESC").get()
 
+# Creating records
+user = User.create_one(username="admin", email="admin@email.com", status=1)
+
+# Or...
+users_created = User.create_many([
+    {"username": "admin", "email": "admin@email.com", "status": 1},
+    {"username": "staff", "email": "staff@email.com", "status": 1},
+    {"username": "guest", "email": "guest@email.com", "status": 1},
+])
+
 # Updating records
 User.where("status = ?", 0).update("status = ?", 1).exec()
 

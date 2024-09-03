@@ -18,6 +18,7 @@ class SQLQueryBuilder(ABC):
     def __init__(self, table: str):
         self.__table = table
         self.__columns = []
+        self.__values = []
         self.__where = []
         self.__order_by = []
         self.__limit = None
@@ -30,6 +31,31 @@ class SQLQueryBuilder(ABC):
     def select(self, *columns: str) -> "SQLQueryBuilder":
         self._operation = "SELECT"
         self.__columns.extend(columns)
+
+        return self
+
+    def insert(self, **kwargs) -> "SQLQueryBuilder":
+        self._operation = "INSERT"
+        self.__columns = list(kwargs.keys())
+        self.__values = list(kwargs.values())
+        self.__params = self.__values
+
+        return self
+
+    def insert_many(self, records: list[dict[str, Any]]) -> "SQLQueryBuilder":
+        if not records:
+            raise ValueError("No records provided for insert_many")
+
+        self._operation = "INSERT"
+        self.__columns = list(records[0].keys())
+
+        values = []
+        for record in records:
+            if set(record.keys()) != set(self.__columns):
+                raise ValueError("All records must have the same columns")
+            values.extend(record.values())
+
+        self.__params = values
 
         return self
 
@@ -76,6 +102,11 @@ class SQLQueryBuilder(ABC):
             query = f"UPDATE {self.__table} SET {self.__set_clause}"
         elif self._operation == "DELETE":
             query = f"DELETE FROM {self.__table}"
+        elif self._operation == "INSERT":
+            columns = ", ".join(self.__columns)
+            placeholders = ", ".join(["?" for _ in self.__columns])
+            query = f"INSERT INTO {self.__table} ({columns}) VALUES "
+            query += ", ".join([f"({placeholders})" for _ in range(len(self.__params) // len(self.__columns))])
         else:
             raise ValueError(f"Unsupported operation: {self._operation}")
 
@@ -110,7 +141,7 @@ class QueryBuilder(SQLQueryBuilder):
         return [self.__model(**row) for row in rows]
 
     def exec(self) -> None:
-        if self._operation not in ["UPDATE", "DELETE"]:
+        if self._operation not in ["INSERT", "UPDATE", "DELETE"]:
             raise ValueError("exec() can only be used with UPDATE or DELETE operations.")
 
         query, params = self.get_query()
@@ -140,11 +171,24 @@ class Model(ABC):
 
     @classmethod
     def create_one(cls: type[T], **kwargs) -> T:
-        pass
+        QueryBuilder(cls.table, db_connection=cls.__db).insert(**kwargs).exec()
+
+        last_id = cls.__db.get_last_inserted_id()
+        instance = cls(**kwargs)
+
+        if last_id and cls.primary_key:
+            setattr(instance, cls.primary_key, last_id)
+
+        return instance
 
     @classmethod
-    def create_many(cls: type[T], **kwargs) -> None:
-        pass
+    def create_many(cls: type[T], records: list[dict[str, Any]]) -> Union[int, None]:
+        if not records:
+            return None
+
+        QueryBuilder(cls.table, db_connection=cls.__db).insert_many(records).exec()
+
+        return len(records)
 
     @classmethod
     def query(cls: type[T]) -> QueryBuilder:
